@@ -84,7 +84,7 @@ go-mysql-transfer是一款MySQL数据库实时增量同步工具。
 
 **二进制安装包**
 
-直接下载安装包:  [点击下载](https://github.com/wj596/go-mysql-transfer/releases)
+直接下载安装包:  [点击下载](https://github.com/NICEXAI/go-mysql-transfer/releases)
 
 **源码编译**
 
@@ -92,7 +92,7 @@ go-mysql-transfer是一款MySQL数据库实时增量同步工具。
 
 2、设置' GO111MODULE=on '
 
-3、拉取源码 ' git clone https://github.com/wj596/go-mysql-transfer.git '
+3、拉取源码 ' git clone https://github.com/NICEXAI/go-mysql-transfer.git'
 
 4、进入目录，执行 ' go build '编译
 
@@ -120,10 +120,6 @@ server_id=1 # 配置 MySQL replaction 需要定义，不要和 go-mysql-transfer
 
 3、Linux执行 nohup go-mysql-transfer &
 
-
-# gitee
-
-如果您的github访问不稳定，可以在码云(gitee)上star项目：[go-mysql-transfer 码云(gitee)](https://gitee.com/wj596/go-mysql-transfer) 
 
 # 使用说明
 
