@@ -202,3 +202,9 @@ server_id=1 # 配置 MySQL replaction 需要定义，不要和 go-mysql-transfer
 
 **v1.0.4 release**
 * 修复了 -position 命令，binlog 名称验证问题
+
+
+**v1.0.5 release**
+* Fix elastic:Error 401(Unauthorized)
+* Fix transfer stop
+* Fix document missing
