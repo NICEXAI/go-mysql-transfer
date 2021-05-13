@@ -146,7 +146,6 @@ func initConfig(fileName string) error {
 	}
 
 	var c Config
-
 	if err := yaml.Unmarshal(data, &c); err != nil {
 		return errors.Trace(err)
 	}
@@ -387,6 +386,8 @@ func checkElsConfig(c *Config) error {
 	if !(c.ElsVersion == 6 || c.ElsVersion == 7) {
 		return errors.Errorf("elasticsearch version must 6 or 7")
 	}
+
+	c.isReserveRawData = true
 
 	return nil
 }

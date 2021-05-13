@@ -24,8 +24,8 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/go-mysql-org/go-mysql/schema"
 	"github.com/juju/errors"
-	"github.com/siddontang/go-mysql/schema"
 	"github.com/vmihailenco/msgpack"
 	"github.com/yuin/gopher-lua"
 	"github.com/yuin/gopher-lua/parse"
@@ -84,8 +84,8 @@ type Rule struct {
 
 	// ------------------- REDIS -----------------
 	//对应redis的5种数据类型 String、Hash(字典) 、List(列表) 、Set(集合)、Sorted Set(有序集合)
-	RedisStructure string `yaml:"redis_structure"`
-	RedisKeyPrefix string `yaml:"redis_key_prefix"` //key的前缀
+	RedisStructure string `yaml:""`
+	RedisKeyPrefix string `yaml:"rediredis_structures_key_prefix"` //key的前缀
 	RedisKeyColumn string `yaml:"redis_key_column"` //使用哪个列的值作为key，不填写默认使用主键
 	// 格式化定义key,如{id}-{name}；{id}表示字段id的值、{name}表示字段name的值
 	RedisKeyFormatter string `yaml:"redis_key_formatter"`

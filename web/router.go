@@ -7,7 +7,6 @@ import (
 	"go-mysql-transfer/util/nets"
 	"log"
 	"net/http"
-	"path"
 	"strconv"
 	"time"
 
@@ -25,14 +24,16 @@ func Start() error {
 		return nil
 	}
 
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.DebugMode)
 	g := gin.New()
 	//statics := "D:\\statics"
 	//index := "D:\\statics\\index.html"
 
-	statics := "statics"
-	index := path.Join(statics, "index.html")
-	g.Static("/statics", statics)
+	statics := "./statics"
+	//index := path.Join(statics, "index.html")
+	index := "./statics/index.html"
+	//g.Static("./statics", statics)
+	g.Static("./statics",statics)
 	g.LoadHTMLFiles(index)
 	g.GET("/", webAdminFunc)
 

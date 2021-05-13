@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/schema"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/siddontang/go-mysql/canal"
-	"github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/schema"
 
 	"go-mysql-transfer/global"
 	"go-mysql-transfer/model"
@@ -307,15 +307,22 @@ func oldRowMap(req *model.RowRequest, rule *global.Rule, primitive bool) map[str
 }
 
 func primaryKey(re *model.RowRequest, rule *global.Rule) interface{} {
+	currentRow := make([]interface{}, 0)
+	if re.Action == canal.UpdateAction {
+		currentRow = re.Old
+	} else {
+		currentRow = re.Row
+	}
+
 	if rule.IsCompositeKey { // 组合ID
 		var key string
 		for _, index := range rule.TableInfo.PKColumns {
-			key += stringutil.ToString(re.Row[index])
+			key += stringutil.ToString(currentRow[index])
 		}
 		return key
 	} else {
 		index := rule.TableInfo.PKColumns[0]
-		data := re.Row[index]
+		data := currentRow[index]
 		column := rule.TableInfo.Columns[index]
 		return convertColumnData(data, &column, rule)
 	}
@@ -325,7 +332,7 @@ func elsHosts(addr string) []string {
 	var hosts []string
 	splits := strings.Split(addr, ",")
 	for _, split := range splits {
-		if !strings.HasPrefix(split, "http:") {
+		if !strings.HasPrefix(split, "http") {
 			hosts = append(hosts, "http://"+split)
 		} else {
 			hosts = append(hosts, split)

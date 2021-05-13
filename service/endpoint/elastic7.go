@@ -22,10 +22,10 @@ import (
 	"log"
 	"sync"
 
+	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/juju/errors"
 	"github.com/olivere/elastic/v7"
-	"github.com/siddontang/go-mysql/canal"
-	"github.com/siddontang/go-mysql/mysql"
 
 	"go-mysql-transfer/global"
 	"go-mysql-transfer/metrics"
@@ -54,12 +54,14 @@ func newElastic7Endpoint() *Elastic7Endpoint {
 
 func (s *Elastic7Endpoint) Connect() error {
 	var options []elastic.ClientOptionFunc
+	// Fix no Elasticsearch node available
+	options = append(options, elastic.SetSniff(false))
 	options = append(options, elastic.SetErrorLog(logagent.NewElsLoggerAgent()))
 	options = append(options, elastic.SetURL(s.hosts...))
 	if global.Cfg().ElsUser != "" && global.Cfg().ElsPassword != "" {
-		options = append(options, elastic.SetBasicAuth(global.Cfg().ElsUser, global.Cfg().Password))
+		// Fix elastic:Error 401(Unauthorized)
+		options = append(options, elastic.SetBasicAuth(global.Cfg().ElsUser, global.Cfg().ElsPassword))
 	}
-
 	client, err := elastic.NewClient(options...)
 	if err != nil {
 		return err
@@ -189,7 +191,6 @@ func (s *Elastic7Endpoint) Consume(from mysql.Position, rows []*model.RowRequest
 		}
 
 		metrics.UpdateActionNum(row.Action, row.RuleKey)
-
 		if rule.LuaEnable() {
 			kvm := rowMap(row, rule, true)
 			ls, err := luaengine.DoESOps(kvm, row.Action, rule)
@@ -206,6 +207,9 @@ func (s *Elastic7Endpoint) Consume(from mysql.Position, rows []*model.RowRequest
 			id := primaryKey(row, rule)
 			body := encodeValue(rule, kvm)
 			logs.Infof("action: %s, Index: %s , Id:%s, value: %v", row.Action, rule.ElsIndex, id, body)
+			if id == nil {
+				continue
+			}
 			s.prepareBulk(row.Action, rule.ElsIndex, stringutil.ToString(id), body, bulk)
 		}
 	}
@@ -213,12 +217,10 @@ func (s *Elastic7Endpoint) Consume(from mysql.Position, rows []*model.RowRequest
 	if bulk.NumberOfActions() == 0 {
 		return nil
 	}
-
 	r, err := bulk.Do(context.Background())
 	if err != nil {
 		return err
 	}
-
 	if len(r.Failed()) > 0 {
 		for _, f := range r.Failed() {
 			reason := f.Index + " " + f.Type + " " + f.Result
@@ -226,14 +228,16 @@ func (s *Elastic7Endpoint) Consume(from mysql.Position, rows []*model.RowRequest
 				return nil
 			}
 
-			if f.Error != nil {
+			if f.Error != nil && f.Error.Type == "document_missing_exception" {
+				// Jump document missing error
+				continue
+			} else {
 				reason = f.Error.Reason
 			}
 			log.Println(reason)
 			return errors.New(reason)
 		}
 	}
-
 	logs.Infof("处理完成 %d 条数据", len(rows))
 	return nil
 }

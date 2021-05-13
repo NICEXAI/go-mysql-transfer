@@ -18,14 +18,15 @@
 package service
 
 import (
+	"fmt"
 	"go-mysql-transfer/metrics"
 	"log"
 	"time"
 
+	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
 	"github.com/juju/errors"
-	"github.com/siddontang/go-mysql/canal"
-	"github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
 
 	"go-mysql-transfer/global"
 	"go-mysql-transfer/model"
@@ -98,9 +99,8 @@ func (s *handler) OnRow(e *canal.RowsEvent) error {
 				v.RuleKey = ruleKey
 				v.Action = e.Action
 				v.Timestamp = e.Header.Timestamp
-				if global.Cfg().IsReserveRawData() {
-					v.Old = e.Rows[i-1]
-				}
+				// The original data should persist
+				v.Old = e.Rows[i-1]
 				v.Row = e.Rows[i]
 				requests = append(requests, v)
 			}
@@ -176,6 +176,7 @@ func (s *handler) startListener() {
 					_transferService.endpointEnable.Store(false)
 					metrics.SetDestState(metrics.DestStateFail)
 					logs.Error(err.Error())
+					fmt.Println(err.Error(), 123)
 					go _transferService.stopDump()
 				}
 				requests = requests[0:0]
